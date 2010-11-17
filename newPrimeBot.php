@@ -52,15 +52,12 @@ class PrimeBot {
             '^!warez' => 'warez',
             '^!question' => 'askQuestion',
             '^!.*' => 'shakesHead',
-        	'.*' => 'log',
         );
         
         $this->_joinHandlers = array(
             '.*'	=> 'hello',
-            '.*'	=> 'joinLog'
         );
         $this->_partHandlers = array(
-            '.*'	=> 'part'
         );        
         
     }
@@ -99,11 +96,11 @@ class PrimeBot {
             {
                 $method = "_". $method;
                 $this->{$method}();
-                
-                // We only want to match one...
-                break;
             }
         }
+        
+        // Log...
+        $this->_log();
     }
     
     /**
@@ -124,6 +121,10 @@ class PrimeBot {
                 $this->{$method}();
             }
         }
+        
+        // Log...
+        $this->_joinLog();
+        
     }
     
     /**
@@ -144,6 +145,10 @@ class PrimeBot {
                 $this->{$method}();
             }
         }
+        
+        // Log...
+        $this->_partLog();
+        
     }   
     
     /**
@@ -159,7 +164,7 @@ class PrimeBot {
     /**
      * Log the user leaving
      */
-    private function _part()
+    private function _partLog()
     {
         try {
             // Connect
