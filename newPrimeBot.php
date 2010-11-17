@@ -47,11 +47,12 @@ class PrimeBot {
             '[hello|hi] '. $this->_botName  => 'helloBot', 
             '^!lolcat' => 'getLolcat',
             '^!help'	=> 'botHelp',
-            '.*' => 'log',
             '^!seen' => 'seen',
             '^!channelstats' => 'channelStats',
             '^!warez' => 'warez',
-            '^!.*' => 'shakesHead'
+            '^!question' => 'askQuestion',
+            '^!.*' => 'shakesHead',
+        	'.*' => 'log',
         );
         
         $this->_joinHandlers = array(
@@ -380,7 +381,7 @@ class PrimeBot {
         $question = escapeshellcmd($question);
         $hack = false;
         if (strpos($question, ";") === FALSE ) {
-            $value = `ruby /home/sites/testbench/phpManual.rb $question`;
+            $value = `ruby phpManual.rb $question`;
             
         }
         else {
@@ -407,10 +408,10 @@ class PrimeBot {
         $question = escapeshellcmd($question);
         
         if ($question == "") {
-            $value = `ruby /home/sites/testbench/jokes.rb`;
+            $value = `ruby jokes.rb`;
         }
         else {
-            $value = `ruby /home/sites/testbench/jokes.rb $question`;    
+            $value = `ruby jokes.rb $question`;    
         }
         
         if ($value) {
