@@ -378,7 +378,7 @@ class PrimeBot {
         if ($this->_data->nick == $this->_irc->_nick)
             return;
         
-        $this->_message('Hi '.$this->_data->nick .', welcome to #prime, we rock harder than #bee. ;)');
+        $this->_message('Hi '.$this->_data->nick .', welcome to '. $this->_data->channel);
         $this->_message($this->_data->nick .' type "!help" to find out what I can do for you.');
     }    
     

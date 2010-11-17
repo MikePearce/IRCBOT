@@ -19,3 +19,12 @@ Modify the code you see in newPrimeBot.php to reflect names, servers and default
 With the names of the channels as arguments. You shouldn't add a #
 
 Contact me on mike@mikepearce.net for help, or @MikePearce on twitter.
+
+TODO
+----
+* Listen for /invites
+* Use /me for shakes head
+* case sensitivity for name & greeting
+* !messagefor
+* !whereareyou - shows the channels the bot is currently on
+* Limit the number of channels the bot can join
