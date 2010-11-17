@@ -273,7 +273,13 @@ class PrimeBot {
         
         $row = $stmt->fetch(PDO::FETCH_OBJ);
 
-        $this->_message($this->_data->nick.': I last saw '. trim($nick) .' at '. $row->when .' saying "'. trim($row->said) .'"');
+        if (isset($row->when)) {
+            $this->_message($this->_data->nick.': I last saw '. trim($nick) .' at '. $row->when .' saying "'. trim($row->said) .'"');    
+        }
+        else {
+            $this->_message($this->_data->nick.': I\'ve never seen '. trim($nick));
+        }
+        
                 
     }
     /**
