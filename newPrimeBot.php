@@ -51,6 +51,7 @@ class PrimeBot {
             '^!channelstats' => 'channelStats',
             '^!warez' => 'warez',
             '^!question' => 'askQuestion',
+            '^!brofist' => 'broFist',
             '^!.*' => 'shakesHead',
         );
         
@@ -96,6 +97,8 @@ class PrimeBot {
             {
                 $method = "_". $method;
                 $this->{$method}();
+                
+                break;
             }
         }
         
@@ -232,9 +235,24 @@ class PrimeBot {
         }
     }
     
+    /**
+	 * Throw a bro fist
+     */
+    private function _broFist()
+    {
+        $this->_message("..............__");
+        $this->_message("......../´¯/''/´`¸");
+        $this->_message("...../'/../../..../¨¯\\");
+        $this->_message("...('(...´..´.¯~/'..')");
+        $this->_message("....\...........'.../");
+        $this->_message(".....\...\.... _.·´");
+        $this->_message("......\.......(");
+        $this->_message("BRO FIST");
+    }
+    
     private function _shakesHead()
     {
-        $this->_message('/me shakes his head...');
+        $this->_privmessage('Sorry, that doesn\'t do anything!', $this->_data->nick);
     }
     
     /**
@@ -482,6 +500,21 @@ class PrimeBot {
     private function _message($message)
     {
         $this->_irc->message(SMARTIRC_TYPE_CHANNEL, $this->_data->channel, $message);
+    }
+    
+    /**
+     * Print message to current channel
+     * @param string $message
+     */
+    private function _privmessage($message)
+    {
+        $this->_irc->message(SMARTIRC_TYPE_CHANNEL, $this->_data->channel, $message);
+    }    
+    
+    private function _notice($message, $user)
+    {
+        return;
+        $this->_irc->message(SMARTIRC_TYPE_CHANNEL, $user, $message);
     }
     
     /**
