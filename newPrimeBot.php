@@ -396,7 +396,53 @@ class PrimeBot {
         if ($this->_data->nick == $this->_irc->_nick)
             return;
         
-        $this->_message('Hi '.$this->_data->nick .', welcome to '. $this->_data->channel);
+        $greetings = array(
+            'Mirëdita' => 'Albanian friends',
+            'Ahalan' => 'Arabic',
+            'Parev' => 'Armenian',
+            'Zdravei' => 'Bulgarian',
+            'Nei Ho' => 'Chinese',
+            'Dobrý den' => 'Czech',
+            'Goddag' => 'Danish',
+            'Goede dag' => 'Dutch',
+            'Hello' => 'English',
+            'Saluton' => 'Esperanto',
+            'Hei' => 'Finnish',
+            'Bonjour' => 'French',
+            'Guten Tag' => 'German',
+            'Gia\'sou' => 'Greek',
+            'Aloha' => 'Hawaiian',
+            'Shalom' => 'Hebrew',
+            'Namaste' => 'Hindi',
+            'Jó napot' => 'Hungarian',
+            'Góðan daginn' => 'Icelandic',
+            'Halo' => 'Indonesian',
+            'Aksunai Qanuipit?' => ' Inuit',
+            'Dia dhuit' => 'Irish',
+            'Salve' => 'Italian',
+            'Kon-nichiwa' => 'Japanese',
+            'An-nyong Ha-se-yo' => ' Korean',
+            'Salvëte' => 'Latin',
+            'Ni hao' => 'Mandarin',
+            'Hallo' => 'Norwegian',
+            'Dzien\' dobry' => 'Polish',
+            'Olá' => 'Portuguese',
+            'Bunã ziua' => 'Romanian',
+            'Zdravstvuyte' => 'Russian',
+            'Hola' => 'Spanish',
+            'Hujambo' => ' Swahili',
+            'Hej' => 'Swedish',
+            'Sa-wat-dee' => 'Thai',
+            'Merhaba' => 'Turkish',
+            'Vitayu' => 'Ukrainian',
+            'Xin chào' => 'Vietnamese',
+            'Hylo; Sut Mae?' => 'Welsh',
+            'Sholem Aleychem' => 'Yiddish',
+            'Sawubona' => 'Zulu');
+        
+        $greeting = array_rand($greetings);
+        $language = $greetings[$greeting];
+        $this->_message($greeting .' '. $this->_data->nick .'! (That\'s how you greet someone in '. $language .')');
         $this->_privmessage('Type "!help" to find out what I can do for you.', $this->_data->nick);
     }    
     
