@@ -336,7 +336,7 @@ class PrimeBot {
      */
     private function _botHelp()
     {
-        $this->_message($this->_data->nick.': Help eh? These are the things I can do:');
+        $this->_privmessage('Help eh? These are the things I can do:', $this->_data->nick);
         foreach( array(
         	'!usage <php function> - this will grab the usage for the function',
             '!lolcat - I will return the URL for a random lolcat image from flickr',
@@ -349,7 +349,7 @@ class PrimeBot {
             '!channelstats - Will return some basic channel stats',
             '!messagefor-<nick> message goes here - leave a message for someone (not implemented yet)'
         ) AS $thing) {
-            $this->_message($thing);
+            $this->_privmessage($thing, $this->_data->nick);
         }
         
     }    
@@ -397,7 +397,7 @@ class PrimeBot {
             return;
         
         $this->_message('Hi '.$this->_data->nick .', welcome to '. $this->_data->channel);
-        $this->_message($this->_data->nick .' type "!help" to find out what I can do for you.');
+        $this->_privmessage('Type "!help" to find out what I can do for you.', $this->_data->nick);
     }    
     
     /**
@@ -506,9 +506,9 @@ class PrimeBot {
      * Print message to current channel
      * @param string $message
      */
-    private function _privmessage($message)
+    private function _privmessage($message, $user)
     {
-        $this->_irc->message(SMARTIRC_TYPE_CHANNEL, $this->_data->channel, $message);
+        $this->_irc->message(SMARTIRC_TYPE_QUERY, $user, $message);
     }    
     
     private function _notice($message, $user)
@@ -561,7 +561,7 @@ $irc = new Net_SmartIRC();
 $irc->setUseSockets(TRUE);
 
 // Set a global handler for joins and messages
-$irc->registerActionhandler(SMARTIRC_TYPE_CHANNEL, '.*', $bot, 'actionHandler');
+$irc->registerActionhandler(SMARTIRC_TYPE_CHANNEL|SMARTIRC_TYPE_QUERY, '.*', $bot, 'actionHandler');
 $irc->registerActionhandler(SMARTIRC_TYPE_JOIN, '.*', $bot, 'joinHandler');
 $irc->registerActionhandler(SMARTIRC_TYPE_PART, '.*', $bot, 'partHandler');
 $irc->connect('irc.affiliatewindow.com', 6667);
