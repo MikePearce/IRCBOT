@@ -27,7 +27,7 @@ foreach($argv AS $arg)
         $channel[] = '#'.$arg;    
     }
 }
-
+$bot->setChannels($channel);
 $irc->login($bot->getBotName(), $bot->getBotName(), 8,$bot->getBotName());
 $irc->join($channel);
 $irc->listen();

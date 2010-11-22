@@ -372,11 +372,11 @@ class PrimeBot {
     /**
      * Leave a channel if told
      */
-    private function _leave()
+    private function _leaveChannel()
     {
         if ($this->_data->nick == $this->_botMaster)
         {
-            $this->_irc->part('Toodleoo!');
+            $this->_irc->part($this->_data->channel, 'Toodleoo!');
         }
         else {
             $this->_privmessage(
@@ -426,6 +426,7 @@ class PrimeBot {
      */
     private function _tickets()
     {
+        return;
         $user = str_replace("!tickets ", "", $this->_data->message);
         $url = 'http://'. $this->getTicketPassword() .'@dtrac.affiliatewindow.com/query?'.
             'status=assigned&'.
@@ -437,7 +438,7 @@ class PrimeBot {
             'status=testing_done&'.
             'format=rss&'.
             'order=priority&'.
-            'owner='. $user;
+            'owner='. ($user ? $user : $this->_data->nick);
 
         $xml = simplexml_load_file(urlencode($url));
         $tickets = false;
