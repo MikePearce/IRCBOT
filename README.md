@@ -28,3 +28,10 @@ TODO
 * !messagefor
 * !whereareyou - shows the channels the bot is currently on
 * Limit the number of channels the bot can join
+* Store settings in the db and manipulate them via !commands (from registeredusers)
+
+
+Changelog
+---------
+v2.3 - Made it less annoying by only messaging you if you talk to it.
+v1.0 - Release!

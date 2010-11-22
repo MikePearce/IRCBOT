@@ -3,11 +3,9 @@
 include_once('Net/SmartIRC.php');
 include_once('thimblBot.php');
 
-
 // Instantiate
 $bot = new PrimeBot();
-$bot->setBotName('PrimeBot');
-
+$bot->setBotName('Thimblomatic');
 $irc = new Net_SmartIRC();
 
 //$irc->setDebug(SMARTIRC_DEBUG_IRCMESSAGES);
@@ -17,9 +15,9 @@ $irc->setUseSockets(TRUE);
 $irc->registerActionhandler(SMARTIRC_TYPE_CHANNEL|SMARTIRC_TYPE_QUERY, '.*', $bot, 'actionHandler');
 $irc->registerActionhandler(SMARTIRC_TYPE_JOIN, '.*', $bot, 'joinHandler');
 $irc->registerActionhandler(SMARTIRC_TYPE_PART, '.*', $bot, 'partHandler');
-$irc->connect('irc.affiliatewindow.com', 6667);
+$irc->connect('irc.freenode.net', 8001);
 
-$channel = array('#mike');
+$channel = array();
 foreach($argv AS $arg)
 {
     if (strpos($arg, '.php') === false) {
