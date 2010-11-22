@@ -29,6 +29,8 @@ class PrimeBot {
     private $_currentChannels;
 
     private $_maxChannels;
+
+    private $_botMaster;
     
     /**
      * 
@@ -59,11 +61,11 @@ class PrimeBot {
             '^!brofist' => 'broFist',
             '^!tickets' => 'tickets',
             '^!whereareyou' => 'whereAreYou',
-            '^!.*' => 'shakesHead',
+            '^!leave' => 'leaveChannel',
         );
         
         $this->_joinHandlers = array(
-            //'.*'	=> 'hello',
+            '.*'	=> 'checkMessageFor',
         );
         $this->_partHandlers = array(
         );
@@ -74,8 +76,27 @@ class PrimeBot {
         // Set as array
         $this->_currentChannels = array();
 
-        $this->_maxChannels = 1;
+        // Max channels
+        $this->_maxChannels = 5;
         
+    }
+
+    /**
+     * Set max number of channels
+     * @param int $m
+     */
+    public function setMaxChannels($m)
+    {
+        $this->_maxChannels = $m;
+    }
+
+    /**
+     * Set's teh user that a bot can respond to.
+     * @param string $master
+     */
+    public function setBotMaster($master)
+    {
+        $this->_botMaster = $master;
     }
 
     /**
@@ -194,7 +215,7 @@ class PrimeBot {
         }
         
         // Log...
-        $this->_joinLog();
+        $this->_partJoinLog(false);
         
     }
     
@@ -218,7 +239,7 @@ class PrimeBot {
         }
         
         // Log...
-        $this->_partLog();
+        $this->_partJoinLog();
         
     }   
     
@@ -235,14 +256,21 @@ class PrimeBot {
     /**
      * Log the user leaving
      */
-    private function _partLog()
+    private function _partJoinLog($part = true)
     {
         try {
             // Connect
             $dbh = $this->_connectToDb();
-            
-            // Insert
-            $dbh->exec("INSERT INTO log_table(`nick`, `said`, `when`) VALUES ('". $this->_data->nick ."','#part#',NOW())");
+
+            if ($part)
+            {
+                // Insert
+                $dbh->exec("INSERT INTO log_table(`nick`, `said`, `when`) VALUES ('". $this->_data->nick ."','#part#',NOW())");
+            }
+            else {
+                $dbh->exec("INSERT INTO log_table(`nick`, `said`, `when`, `channel`) VALUES ('". $this->_data->nick ."','#join#',NOW(), '". $this->_data->channel ."')");
+            }
+
             
             $dbh = null;
         	
@@ -252,28 +280,6 @@ class PrimeBot {
             echo $e->getMessage();
         }
     }
-    
-    /**
-     * Log when the user joined
-     */
-    private function _joinLog()
-    {
-        try {
-            // Connect
-            $dbh = $this->_connectToDb();
-            
-            // Insert
-            $dbh->exec("INSERT INTO log_table(`nick`, `said`, `when`, `channel`) VALUES ('". $this->_data->nick ."','#join#',NOW(), '". $this->_data->channel ."')");
-            
-            $dbh = null;
-        	
-        }
-        catch(PDOException $e)
-        {
-            echo $e->getMessage();
-        }
-    }
-    
     
 
     /**
@@ -301,6 +307,84 @@ class PrimeBot {
         {
             echo $e->getMessage();
         }
+    }
+
+    /**
+     * Leave a message for someone.
+     */
+    private function _messageFor()
+    {
+        // First, get the message
+        //$message_for = preg_match('^!messagefor-[$1]', $this->_data->message)
+        //preg_match('/^!messagefor-(.*):/', '!messagefor-Mike I missed you', $matches); var_dump($matches);
+        try {
+            // Connect
+            $dbh = $this->_connectToDb();
+
+            // Insert
+            $stmt = $dbh->prepare("INSERT INTO message(`nick`, `message`, `when`, `from`) VALUES (:nick, :message, NOW(), :from)");
+
+            $stmt->bindParam(':nick', $message_for, PDO::PARAM_STR);
+            $stmt->bindParam(':message', $message_payload, PDO::PARAM_STR);
+            $stmt->bindParam(':from', $this->_data->nick, PDO::PARAM_STR);
+
+            $stmt->execute();
+
+            $dbh = null;
+
+        }
+        catch(PDOException $e)
+        {
+            echo $e->getMessage();
+        }
+    }
+
+    /**
+     * Check for any messages.
+     */
+    private function _checkMessageFor()
+    {
+        return;
+        
+        $dbh = $this->_connectToDb();
+        
+        $stmt = $dbh->query("SELECT message, when, from FROM messages WHERE LOWER(nick) = '". strtolower(trim($this->_data->nick)) ."' AND seen = 0 ORDER BY id DESC LIMIT 1");
+        
+        $row = $stmt->fetch(PDO::FETCH_OBJ);
+
+        if (isset($row->when)) {
+
+            $this->_privmessage(
+                    'I have a message for you from '. $row->from,
+                    $this->_data->nick
+            );
+            $this->_privmessage(
+                    'Message begin: '. $row->message .' :: Message End',
+                    $this->_data->nick
+            );
+            $this->_privmessage(
+                    'Send: '. $row->when,
+                    $this->_data->nick
+            );
+        }
+    }
+
+    /**
+     * Leave a channel if told
+     */
+    private function _leave()
+    {
+        if ($this->_data->nick == $this->_botMaster)
+        {
+            $this->_irc->part('Toodleoo!');
+        }
+        else {
+            $this->_privmessage(
+                'Sorry, you\'re not my master',
+                $this->_data->nick
+            );
+        }
+
     }
 
     /**
@@ -390,11 +474,6 @@ class PrimeBot {
         $this->_message("BRO FIST");
     }
     
-    private function _shakesHead()
-    {
-        $this->_privmessage('Sorry, that doesn\'t do anything!', $this->_data->nick);
-    }
-    
     /**
      * Useless
      */
@@ -479,16 +558,15 @@ class PrimeBot {
     {
         $this->_privmessage('Help eh? These are the things I can do:', $this->_data->nick);
         foreach( array(
-        	'!usage <php function> - this will grab the usage for the function',
+            '!usage <php function> - this will grab the usage for the function',
             '!lolcat - I will return the URL for a random lolcat image from flickr',
-        	'!joke <theme (optional)>- Ask me to tell you a joke, supply an optional theme!',
-        	'!question <short question> - I will attempt to answer the question!',
-        	'!8ball <question> - I will use my magic 8 ball to answer the question',
+            '!joke <theme (optional)>- Ask me to tell you a joke, supply an optional theme!',
+            '!question <short question> - I will attempt to answer the question!',
+            '!8ball <question> - I will use my magic 8 ball to answer the question',
             '!version - Learn a bit about me.',
             '!seen <nick> - I can tell you the last time I saw a user',
-            '!warez <searchterm> - I will list all my 0day warez I can file transfer you!',
             '!channelstats - Will return some basic channel stats',
-            '!tickets <user> - Will return any dtrac tickets assigned to that user',
+            '!whereareyou - I\'ll give you a list of my channels.',
             '!messagefor-<nick> message goes here - leave a message for someone (not implemented yet)'
         ) AS $thing) {
             $this->_privmessage($thing, $this->_data->nick);

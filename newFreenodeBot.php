@@ -6,6 +6,8 @@ include_once('thimblBot.php');
 // Instantiate
 $bot = new PrimeBot();
 $bot->setBotName('Thimblomatic');
+$bot->setBotMaster('Mike');
+$bot->setMaxChannels(5);
 $irc = new Net_SmartIRC();
 
 //$irc->setDebug(SMARTIRC_DEBUG_IRCMESSAGES);
