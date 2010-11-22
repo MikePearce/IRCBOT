@@ -24,12 +24,11 @@ TODO
 ----
 * Listen for /invites
 * Use /me for shakes head
-* case sensitivity for name & greeting
 * !messagefor
 * !whereareyou - shows the channels the bot is currently on
 * Limit the number of channels the bot can join
 * Store settings in the db and manipulate them via !commands (from registeredusers)
-
+* Add searching to the logging.
 
 Changelog
 ---------
