@@ -30,8 +30,6 @@ class PrimeBot {
      */
     public function __construct()
     {
-        $this->_botName = 'PrimeBot';
-        
         // Setup some options for connecting remotely
         $this->_options = array( 
         	'http' => array(
@@ -46,7 +44,6 @@ class PrimeBot {
             '^!8ball' => '8ball',
             '^!joke' => 'joke',
             '^!usage' => 'usage',
-            '^[hello|hi] '. $this->_botName  => 'helloBot',
             '^!lolcat' => 'getLolcat',
             '^!help'	=> 'botHelp',
             '^!seen' => 'seen',
@@ -55,8 +52,7 @@ class PrimeBot {
             '^!question' => 'askQuestion',
             '^!brofist' => 'broFist',
             '^!tickets' => 'tickets',
-            $this->_botName  => 'hello',
-            //'^!.*' => 'shakesHead',
+            '^!.*' => 'shakesHead',
         );
         
         $this->_joinHandlers = array(
@@ -81,6 +77,11 @@ class PrimeBot {
     public function setBotName($b)
     {
         $this->_botName = $b;
+
+        // And add to action handlers
+        $this->_actionHandlers += array(
+            '^hello|hi '. $this->_botName  => 'hello'
+        );
     }
 
     /**
@@ -435,19 +436,6 @@ class PrimeBot {
     }    
     
     /**
-     * Respond to niceties
-     */
-    private function _helloBot()
-    {
-       // if _we_ join, don't greet ourself, just jump out via return
-        if ($this->_data->nick == $this->_irc->_nick)
-            return;
-        
-        // it is, lets greet the joint user
-        $this->_message('Hi '.$this->_data->nick);
-    }    
-    
-    /**
      * 
      * Greet the user and update last seen stats
      */
@@ -503,7 +491,7 @@ class PrimeBot {
         
         $greeting = array_rand($greetings);
         $language = $greetings[$greeting];
-        $this->_privmessage($greeting .' '. $this->_data->nick .'! (That\'s how you greet someone in '. $language .')');
+        $this->_privmessage($greeting .' '. $this->_data->nick .'! (That\'s how you greet someone in '. $language .')', $this->_data->nick);
         $this->_privmessage('Type "!help" to find out what I can do for you.', $this->_data->nick);
     }    
     

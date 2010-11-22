@@ -17,6 +17,7 @@ $irc->registerActionhandler(SMARTIRC_TYPE_JOIN, '.*', $bot, 'joinHandler');
 $irc->registerActionhandler(SMARTIRC_TYPE_PART, '.*', $bot, 'partHandler');
 $irc->connect('irc.freenode.net', 8001);
 
+
 $channel = array();
 foreach($argv AS $arg)
 {
