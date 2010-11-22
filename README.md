@@ -26,6 +26,7 @@ TODO
 * !messagefor
 * Store settings in the db and manipulate them via !commands (from registeredusers)
 * Remove need for ruby support, use PEAR libraries for scraping (or removing scraping)
+* Add searching to the logging.
 
 Changelog
 ---------
