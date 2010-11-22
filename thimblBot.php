@@ -22,7 +22,13 @@ class PrimeBot {
     
     private $_partHandlers;
 
+    private $_inviteHandlers;
+
     private $_ticketPassword;
+
+    private $_currentChannels;
+
+    private $_maxChannels;
     
     /**
      * 
@@ -52,6 +58,7 @@ class PrimeBot {
             '^!question' => 'askQuestion',
             '^!brofist' => 'broFist',
             '^!tickets' => 'tickets',
+            '^!whereareyou' => 'whereAreYou',
             '^!.*' => 'shakesHead',
         );
         
@@ -59,7 +66,30 @@ class PrimeBot {
             //'.*'	=> 'hello',
         );
         $this->_partHandlers = array(
-        );        
+        );
+        $this->_inviteHandlers = array(
+            '.*' => 'invited'
+        );
+
+        // Set as array
+        $this->_currentChannels = array();
+
+        $this->_maxChannels = 1;
+        
+    }
+
+    /**
+     * Set the channels the bot is on on join
+     * @param mixed $channels
+     */
+    public function setChannels($channels)
+    {
+        if (is_array($channels)) {
+            $this->_currentChannels += $channels;
+        }
+        else {
+            $this->_currentChannels[] = $channels;
+        }
         
     }
     
@@ -125,6 +155,23 @@ class PrimeBot {
         
         // Log...
         $this->_log();
+    }
+
+    public function inviteHandler($irc, $data)
+    {
+        $this->_irc = $irc;
+        $this->_data = $data;
+
+        foreach($this->_inviteHandlers AS $regex => $method)
+        {
+            if (preg_match('/'. $regex .'/', $this->_data->message))
+            {
+                $method = "_". $method;
+                $this->{$method}();
+
+                break;
+            }
+        }
     }
     
     /**
@@ -254,6 +301,39 @@ class PrimeBot {
         {
             echo $e->getMessage();
         }
+    }
+
+    /**
+     * What happens when the bot is invited somewhere
+     */
+    private function _invited()
+    {
+        // Check we're not over-joined
+        if (count($this->_currentChannels) < $this->_maxChannels)
+        {
+            $this->setChannels($this->_data->message);
+            $this->_irc->join($this->_data->message);
+        }
+        else {
+            $this->_privmessage(
+                'Sorry, I\'m already in too many channels.', 
+                $this->_data->nick
+            );
+        }
+    }
+
+    /**
+     * Bot responds with where he is.
+     */
+    private function _whereAreYou()
+    {
+        $channels = '';
+        foreach($this->_currentChannels AS $channel)
+        {
+            $channels .= $channel .", ";
+        }
+
+        $this->_message($this->_data->nick .": I am in ". $channels);
     }
 
     /**
@@ -589,12 +669,20 @@ class PrimeBot {
     }
     
     /**
-     * Print message to current channel
+     * Print message to current channel or to nick if no channel
      * @param string $message
      */
     private function _message($message)
     {
-        $this->_irc->message(SMARTIRC_TYPE_CHANNEL, $this->_data->channel, $message);
+        if ($this->_data->channel)
+        {
+            $this->_irc->message(SMARTIRC_TYPE_CHANNEL, $this->_data->channel, $message);
+        }
+        else {
+            $this->_privmessage($message, $this->_data->nick);
+        }
+
+        
     }
     
     /**
