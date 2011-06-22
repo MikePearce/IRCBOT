@@ -5,32 +5,23 @@ include_once('Net/SmartIRC.php');
 class PrimeBot {
     
     private $_yql = "http://query.yahooapis.com/v1/public/yql?q=";
-    
-    private $_version = '2.3';
-    
+    private $_version = '2.5';
     private $_botName;
-    
     private $_options;
-    
     private $_data;
-    
     private $_irc;
-    
     private $_actionHandlers;
-    
     private $_joinHandlers;
-    
     private $_partHandlers;
-
     private $_inviteHandlers;
-
     private $_ticketPassword;
-
     private $_currentChannels;
-
     private $_maxChannels;
-
     private $_botMaster;
+    private $_idenfityPassword;
+    private $_dbUser;
+    private $_dbName;
+    private $_dbPassword;
     
     /**
      * 
@@ -47,30 +38,37 @@ class PrimeBot {
             ) 
         );
         
+        // These are things you tell the bot to do
         $this->_actionHandlers = array(
             '^!version' => 'version',
             '^!8ball' => '8ball',
-            '^!joke' => 'joke',
-            '^!usage' => 'usage',
-            '^!lolcat' => 'getLolcat',
+            //'^!joke' => 'joke',
+            //'^!usage' => 'usage',
+            //'^!lolcat' => 'getLolcat',
             '^!help'	=> 'botHelp',
             '^!seen' => 'seen',
             '^!channelstats' => 'channelStats',
             '^!warez' => 'warez',
-            '^!question' => 'askQuestion',
+            //'^!question' => 'askQuestion',
             '^!brofist' => 'broFist',
-            '^!tickets' => 'tickets',
+            //'^!tickets' => 'tickets',
             '^!whereareyou' => 'whereAreYou',
             '^!leave' => 'leaveChannel',
         );
         
+        // These things happen when people join
         $this->_joinHandlers = array(
-            '.*'	=> 'checkMessageFor',
+            //'.*'	=> 'checkMessageFor',
+            '.*' => 'identifyYourself'
         );
+        
+        // These things happen when peeople leave
         $this->_partHandlers = array(
         );
+        
+        // These things happen when the bot is invited somewhere
         $this->_inviteHandlers = array(
-            '.*' => 'invited'
+            //'.*' => 'invited'
         );
 
         // Set as array
@@ -79,6 +77,19 @@ class PrimeBot {
         // Max channels
         $this->_maxChannels = 5;
         
+    }
+    
+    /**
+     * Set the db name
+     * @param string $name
+     * @param string $user
+     * @param string $pass
+     */
+    public function setDbDetails($name, $user, $pass)
+    {
+        $this->_dbName = $name;
+        $this->_dbUser = $user;        
+        $this->_dbPassword = $pass;
     }
 
     /**
@@ -94,12 +105,25 @@ class PrimeBot {
      * Set's teh user that a bot can respond to.
      * @param string $master
      */
-    public function setBotMaster($master)
+    public function setBotMaster()
     {
-        $this->_botMaster = $master;
+        $masters = func_get_args();
+        $this->_botMaster = array();
+        foreach($masters AS $master) {
+            $this->_botMaster[] = $master;
+        }
     }
-
+    
     /**
+     * Set the password to identify with nickserv
+     * @param string $pass
+     */
+    public function setIdentifyPassword($pass)
+    {
+        $this->_identifyPassword = $pass;
+    }
+    
+    /*
      * Set the channels the bot is on on join
      * @param mixed $channels
      */
@@ -111,7 +135,6 @@ class PrimeBot {
         else {
             $this->_currentChannels[] = $channels;
         }
-        
     }
     
     /**
@@ -131,24 +154,8 @@ class PrimeBot {
 
         // And add to action handlers
         $this->_actionHandlers += array(
-            '^hello|hi '. $this->_botName  => 'hello'
+            '^hi '. $this->_botName  => 'hello'
         );
-    }
-
-    /**
-     * Set ticket pass
-     */
-    public function setTicketPassword($p)
-    {
-        $this->_ticketPassword = $p;
-    }
-
-    /**
-     * Get ticket pass
-     */
-    public function getTicketPassword()
-    {
-        return $this->_ticketPassword;
     }
     
     /**
@@ -250,7 +257,11 @@ class PrimeBot {
      */
     private function _connectToDb()
     {
-        return  new PDO("mysql:host=localhost;dbname=bot_logger", 'root', '');
+        return  new PDO(
+            "mysql:host=localhost;dbname=". $this->_dbName, 
+            $this->_dbUser, 
+            $this->_dbPassword
+        );
     }
 
     /**
@@ -293,13 +304,17 @@ class PrimeBot {
             
             // Insert
             $stmt = $dbh->prepare("INSERT INTO log_table(`nick`, `said`, `when`, `channel`) VALUES (:nick, :message, NOW(), :channel)");
-            
+
             $stmt->bindParam(':nick', $this->_data->nick, PDO::PARAM_STR);
             $stmt->bindParam(':message', $this->_data->message, PDO::PARAM_STR);
             $stmt->bindParam(':channel', $this->_data->channel, PDO::PARAM_STR);
-            
-            $stmt->execute();
-            
+      
+            if (!$stmt->execute())
+            {
+                $arr = $stmt->errorInfo();
+                print_r($arr);
+            }
+
             $dbh = null;
         	
         }
@@ -308,7 +323,19 @@ class PrimeBot {
             echo $e->getMessage();
         }
     }
-
+    
+    /**
+     * Identify yourself (if necessary)
+    */
+    private function _identifyYourself()
+    {
+        // If there is a nickserv password and it's us joining
+        if ($this->_identifyPassword AND ($this->_data->nick == $this->_irc->_nick))
+        {
+            $this->_privMessage('identify '. $this->_identifyPassword, 'NickServ');
+        }
+    }
+    
     /**
      * Leave a message for someone.
      */
@@ -374,7 +401,7 @@ class PrimeBot {
      */
     private function _leaveChannel()
     {
-        if ($this->_data->nick == $this->_botMaster)
+        if ($this->isMaster($this->_data->nick))
         {
             $this->_irc->part($this->_data->channel, 'Toodleoo!');
         }
@@ -418,46 +445,6 @@ class PrimeBot {
         }
 
         $this->_message($this->_data->nick .": I am in ". $channels);
-    }
-
-    /**
-     * Grab assigned tickets
-     * @todo Make a bit cleverer, get new|review|testing etc
-     */
-    private function _tickets()
-    {
-        return;
-        $user = str_replace("!tickets ", "", $this->_data->message);
-        $url = 'http://'. $this->getTicketPassword() .'@dtrac.affiliatewindow.com/query?'.
-            'status=assigned&'.
-            'status=deploy&'.
-            'status=development_done&'.
-            'status=new&'.
-            'status=review&'.
-            'status=testing&'.
-            'status=testing_done&'.
-            'format=rss&'.
-            'order=priority&'.
-            'owner='. ($user ? $user : $this->_data->nick);
-
-        $xml = simplexml_load_file(urlencode($url));
-        $tickets = false;
-        foreach($xml->channel->item AS $item)
-        {
-            if ($item->title !== '') {
-                $this->_privmessage(
-                    $this->_data->nick .": ". $item->title .": (". $item->link .")",
-                    $this->_data->nick
-                );
-            }
-            $tickets = true;
-        }
-        if (!$tickets) {
-            $this->_privmessage(
-                $this->_data->nick .": You have no tickets assigned!",
-                $this->_data->nick
-            );
-        }
     }
     
     /**
@@ -559,16 +546,16 @@ class PrimeBot {
     {
         $this->_privmessage('Help eh? These are the things I can do:', $this->_data->nick);
         foreach( array(
-            '!usage <php function> - this will grab the usage for the function',
-            '!lolcat - I will return the URL for a random lolcat image from flickr',
-            '!joke <theme (optional)>- Ask me to tell you a joke, supply an optional theme!',
-            '!question <short question> - I will attempt to answer the question!',
+            //'!usage <php function> - this will grab the usage for the function',
+            //'!lolcat - I will return the URL for a random lolcat image from flickr',
+            //'!joke <theme (optional)>- Ask me to tell you a joke, supply an optional theme!',
+            //'!question <short question> - I will attempt to answer the question!',
             '!8ball <question> - I will use my magic 8 ball to answer the question',
             '!version - Learn a bit about me.',
             '!seen <nick> - I can tell you the last time I saw a user',
             '!channelstats - Will return some basic channel stats',
             '!whereareyou - I\'ll give you a list of my channels.',
-            '!messagefor-<nick> message goes here - leave a message for someone (not implemented yet)'
+            //'!messagefor-<nick> message goes here - leave a message for someone (not implemented yet)'
         ) AS $thing) {
             $this->_privmessage($thing, $this->_data->nick);
         }
@@ -740,7 +727,18 @@ class PrimeBot {
     }
     
     /**
+     * Is the nick a master?
+     * @param string $nick
+     * @return Boolean
+     */
+    private function _isMaster($nick)
+    {
+        return in_array($nick, $this->_botMaster);
+    }
+    
+    /**
      * Return version
+     * @return string
      */
     private function _version() 
     {   

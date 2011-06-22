@@ -1,12 +1,15 @@
 <?php
 
 include_once('Net/SmartIRC.php');
+include_once('settings.php');
 include_once('thimblBot.php');
 
 // Instantiate
 $bot = new PrimeBot();
-$bot->setBotName('Thimblomatic');
-$bot->setBotMaster('Mike');
+$bot->setBotName('BridgeBot');
+$bot->setBotMaster('MikePearce', 'tricknick');
+$bot->setIdentifyPassword($identifyPassword);
+$bot->setDbDetails($db_database, $db_user, $db_pass);
 $bot->setMaxChannels(5);
 $irc = new Net_SmartIRC();
 

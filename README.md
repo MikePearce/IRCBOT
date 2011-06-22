@@ -30,6 +30,7 @@ TODO
 
 Changelog
 ---------
+v2.5 - Tidied some stuff up, moved setting ettings into another file.
 v2.4 - Added support for /invite and !whereareyou
 v2.3 - Made it less annoying by only messaging you if you talk to it.
 v1.0 - Release!
